@@ -1,14 +1,17 @@
-use std::env;
+use std::{env, fs};
 
-fn main() {
+fn main() -> anyhow::Result<()> {
     let args: Vec<String> = env::args().collect();
 
     if args.len() < 2 {
         println!("No source files.");
-        return;
+        return Ok(());
     }
 
     for arg in &args[1..] {
+        let source: String = fs::read_to_string(arg)?;
         println!("{:?}", arg);
     }
+
+    Ok(())
 }
