@@ -13,6 +13,8 @@ name = "app"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "common",
+ "lexer",
  "mimalloc",
 ]
 
@@ -44,6 +46,7 @@ name = "lexer"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "common",
  "mimalloc",
 ]
 
@@ -77,6 +80,7 @@ name = "parser"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "common",
  "mimalloc",
 ]
 

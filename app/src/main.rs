@@ -10,6 +10,7 @@ fn main() -> anyhow::Result<()> {
 
     for arg in &args[1..] {
         let source: String = fs::read_to_string(arg)?;
+        lexer::get_tokens(&source);
         println!("{:?}", source);
     }
 
