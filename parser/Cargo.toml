@@ -14,3 +14,4 @@ panic = "abort"
 mimalloc = "0.1.47"
 
 [dependencies]
+anyhow = "1.0.100"
