@@ -1,5 +1,5 @@
 [package]
-name = "common"
+name = "app"
 version = "0.1.0"
 edition = "2024"
 
@@ -14,3 +14,5 @@ panic = "abort"
 mimalloc = "0.1.47"
 
 [dependencies]
+anyhow = "1.0.100"
+

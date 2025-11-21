@@ -1,0 +1,22 @@
+#[derive(Debug)]
+pub enum TokenType {
+    Identifier(String),
+    Keyword(String),
+    IntLiteral(i64),
+    FloatLiteral(f64),
+    CharLiteral(String),
+    StringLiteral(String),
+    Operator(String),
+    Symbol(String),
+    Semicolon,
+    Begin,
+    End,
+    StatementEnd,
+    ProgramEnd,
+    Comment,
+    OpenParenthesis,
+    CloseParenthesis,
+    OpenSquareBracket,
+    CloseSquareBracket,
+    Null,
+}
