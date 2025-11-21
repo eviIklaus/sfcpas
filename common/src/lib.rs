@@ -8,7 +8,7 @@ pub enum TokenType {
     StringLiteral(String),
     Operator(String),
     Symbol(String),
-    Semicolon(String),
+    Semicolon,
     Begin,
     End,
     StatementEnd,
