@@ -3,4 +3,14 @@ name = "common"
 version = "0.1.0"
 edition = "2024"
 
+[profile.release]
+strip = true
+opt-level = "z"
+lto = true
+codegen-units = 1
+panic = "abort"
+
+[target.'cfg(target_env = "musl")'.dependencies]
+mimalloc = "0.1.47"
+
 [dependencies]
