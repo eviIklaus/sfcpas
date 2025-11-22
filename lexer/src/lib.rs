@@ -22,29 +22,24 @@ impl ReadTokenResult {
 
 #[derive(Debug)]
 struct Reader<'a> {
-    source: &'a str,
     source_iter: Peekable<Chars<'a>>,
     prev_char: Option<char>,
     current_char: Option<char>,
 
     is_first_char: bool,
-    pointer_encountered: bool,
 }
 
 impl<'a> Reader<'a> {
     pub fn new(source: &'a str) -> Self {
         Self {
-            pointer_encountered: false,
             is_first_char: true,
             prev_char: None,
             current_char: None,
-            source,
             source_iter: source.chars().peekable(),
         }
     }
     pub fn reset_for_token_read(&mut self) {
         self.is_first_char = true;
-        self.pointer_encountered = false;
     }
     pub fn is_eof(&mut self) -> bool {
         matches!(self.source_iter.peek(), None)
@@ -173,16 +168,14 @@ impl<'a> Reader<'a> {
             Token::Operator(ref mut val) => {
                 val.push(chr);
                 // Check if it's an assignment operator or
-                // if it reached the end of an operator.
-                if chr == '=' || !common::OPERATORS.contains(&chr) {
+                // if it reached the end of an operator in the next character.
+                let next = *self.peek();
+                if chr == '=' || !common::OPERATORS.contains(&next) {
                     result.continue_reading = false;
                 }
             }
             Token::Identifier(ref mut val) => {
                 val.push(chr);
-                if chr == '^' && !self.pointer_encountered {
-                    self.pointer_encountered = true;
-                }
                 let next = *self.peek();
                 if !next.is_alphanumeric() && next != '_' {
                     result.continue_reading = false;
