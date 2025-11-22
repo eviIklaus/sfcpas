@@ -3,8 +3,24 @@ use common::{Token, TokenType};
 use multipeek::{MultiPeek, multipeek};
 use std::collections::HashMap;
 
+macro_rules! skip_comments {
+    ($a:expr) => {
+        loop {
+            match $a.peek() {
+                Some(token) => match &token.token_type {
+                    TokenType::Comment(_) => {},
+                    _ => break,
+                },
+                _ => break,
+            }
+            $a.next();
+        }
+    }
+}
+
 macro_rules! skip_expected {
     ($a:tt, $b:expr) => {
+        skip_comments!($b);
         match $b.next() {
             Some(token) => match &token.token_type {
                 TokenType::$a => {}
@@ -17,12 +33,15 @@ macro_rules! skip_expected {
 
 macro_rules! extract_expected {
     ($a:tt, $b:expr, $c:expr) => {
-        match $c.next() {
-            Some(token) => match &token.token_type {
-                TokenType::$a(val) => val,
-                _ => bail!("Expected {:?}, got: {:#?}", $b, token),
-            },
-            None => bail!("Expected {:?}, got EOF.", $b),
+        {
+            skip_comments!($c);
+            match $c.next() {
+                Some(token) => match &token.token_type {
+                    TokenType::$a(val) => val,
+                    _ => bail!("Expected {:?}, got: {:#?}", $b, token),
+                },
+                None => bail!("Expected {:?}, got EOF.", $b),
+            }
         }
     };
 }
@@ -68,6 +87,10 @@ pub fn parse_var(tokens: &mut MultiPeek<std::slice::Iter<'_, Token>>) -> anyhow:
     }
     println!("New variables: {:#?}", vars);
     Ok(())
+}
+
+pub fn parse_program_stmt() {
+
 }
 
 pub fn parse_tokens(tokens_vec: &Vec<Token>) -> anyhow::Result<()> {
