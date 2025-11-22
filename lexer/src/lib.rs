@@ -72,60 +72,60 @@ impl<'a> Reader<'a> {
         match self.read_next_char() {
             None => result.continue_reading = false,
             Some(chr) => {
-                dbg!(chr);
-                if !chr.is_whitespace() {
-                    if chr == '{' {
-                        result.token = Token::Comment(CommentType::CurlyBrackets)
-                    } else if chr == '[' {
+                let mut is_single_char = true;
+                result.token = match chr {
+                    '{' => Token::Comment(CommentType::CurlyBrackets),
+                    '[' => Token::OpenSquareBracket,
+                    ']' => Token::CloseSquareBracket,
+                    '^' => Token::PointerSymbol,
+                    ';' => Token::Semicolon,
+                    '$' => Token::DollarSign,
+                    '&' => Token::Ampersand,
+                    '@' => Token::AtSign,
+                    ')' => Token::CloseParenthesis,
+                    '#' => Token::Hash,
+                    ':' => Token::Colon,
+                    '.' => Token::Period,
+                    ',' => Token::Comma,
+                    _ => {
+                        is_single_char = false;
+                        result.token
+                    }
+                };
+                if is_single_char {
+                    result.continue_reading = false;
+                    return result;
+                }
+                if chr == '(' {
+                    if *self.peek() == '*' {
+                        result.token = Token::Comment(CommentType::Parenthesis)
+                    } else {
                         result.continue_reading = false;
-                        result.token = Token::OpenSquareBracket
-                    } else if chr == ']' {
+                        result.token = Token::OpenParenthesis
+                    }
+                } else if chr == '\'' {
+                    // Check if a single quote is in the string literal
+                    result.token = Token::StringLiteral(String::new());
+                    if *self.peek() == '\'' {
+                        let Token::StringLiteral(mut val) = result.token else {
+                            panic!("Impossible! It was set as a string literal before.")
+                        };
+                        val.push_str("\'");
+                        result.token = Token::StringLiteral(val)
+                    }
+                } else if chr.is_alphabetic() || chr == '_' {
+                    result.token = Token::Identifier(chr.to_string());
+                    let next = *self.peek();
+                    result.continue_reading = next == '_' || next.is_alphanumeric();
+                } else if chr.is_ascii_digit() {
+                    result.token = Token::IntLiteral(chr.to_string());
+                    result.continue_reading = self.peek().is_ascii_digit();
+                } else if common::OPERATORS.contains(&chr) {
+                    result.token = Token::Operator(chr.to_string());
+                    let next = *self.peek();
+                    // Check if it's an assignment operator or if the operator ends in the next char.
+                    if chr == '=' || !common::OPERATORS.contains(&next) {
                         result.continue_reading = false;
-                        result.token = Token::CloseSquareBracket
-                    } else if chr == '(' {
-                        if *self.peek() == '*' {
-                            result.token = Token::Comment(CommentType::Parenthesis)
-                        } else {
-                            result.continue_reading = false;
-                            result.token = Token::OpenParenthesis
-                        }
-                    } else if chr == ')' {
-                        result.continue_reading = false;
-                        result.token = Token::CloseParenthesis
-                    } else if chr == '\'' {
-                        // Check if a single quote is in the string literal
-                        result.token = Token::StringLiteral(String::new());
-                        if *self.peek() == '\'' {
-                            let Token::StringLiteral(mut val) = result.token else {
-                                panic!("Impossible! It was set as a string literal before.")
-                            };
-                            val.push_str("\'");
-                            result.token = Token::StringLiteral(val)
-                        }
-                    } else if chr.is_alphabetic() || chr == '_' {
-                        result.token = Token::Identifier(chr.to_string());
-                        let next = *self.peek();
-                        result.continue_reading = next == '_' || next.is_alphanumeric();
-                    } else if chr.is_ascii_digit() {
-                        result.token = Token::IntLiteral(chr.to_string());
-                        result.continue_reading = self.peek().is_ascii_digit();
-                    } else if common::SYMBOLS.contains(&chr) {
-                        result.token = Token::Symbol(chr.to_string());
-                        let next = *self.peek();
-                        // Check if the next char is possibly the beginning of a pointer/deref or string literal.
-                        if (chr != '^' && next == '^') || (chr != '\'' && next == '\'') {
-                            result.continue_reading = false;
-                        }
-                        // Check if the symbol ends in the next char.
-                        if !common::SYMBOLS.contains(&next) {
-                            result.continue_reading = false;
-                        }
-                    } else if common::OPERATORS.contains(&chr) {
-                        result.token = Token::Operator(chr.to_string());
-                        // Check if it's an assignment operator or if the operator ends in the next char.
-                        if chr == '=' || !common::OPERATORS.contains(&chr) {
-                            result.continue_reading = false;
-                        }
                     }
                 }
             }
@@ -172,18 +172,6 @@ impl<'a> Reader<'a> {
                     }
                 }
             },
-            Token::Symbol(ref mut val) => {
-                val.push(chr);
-                let next = *self.peek();
-                // Check if the next char is possibly the beginning of a pointer/deref or string literal.
-                if (chr != '^' && next == '^') || (chr != '\'' && next == '\'') {
-                    result.continue_reading = false;
-                }
-                // Check if it reached the end of a symbol
-                if !common::SYMBOLS.contains(&chr) {
-                    result.continue_reading = false;
-                }
-            }
             Token::Operator(ref mut val) => {
                 val.push(chr);
                 // Check if it's an assignment operator or

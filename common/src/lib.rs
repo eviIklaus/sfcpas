@@ -14,16 +14,24 @@ pub enum Token {
     StringLiteral(String),
     Operator(String),
     Symbol(String),
-    Semicolon,
     Begin,
     End,
     StatementEnd,
     ProgramEnd,
     Comment(CommentType),
+    Hash,
+    Colon,
+    Semicolon,
+    PointerSymbol,
+    DollarSign,
+    AtSign,
+    Ampersand,
     OpenParenthesis,
     CloseParenthesis,
     OpenSquareBracket,
     CloseSquareBracket,
+    Period,
+    Comma,
     Eof,
     Null,
 }
@@ -32,6 +40,3 @@ pub static OPERATORS: &'static [char] = &[
     '+', '-', '*', '/', // Arithmetic operators
     '=', '<', '>', // Relational operators
 ];
-
-pub static SYMBOLS: &'static [char] =
-    &[';', ':', ',', '.', '[', ']', '(', ')', '^', '@', '\'', '$'];
