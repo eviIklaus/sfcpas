@@ -10,14 +10,14 @@ macro_rules! skip_comments {
         loop {
             match $a.peek() {
                 Some(token) => match &token.token_type {
-                    TokenType::Comment(_) => {},
+                    TokenType::Comment(_) => {}
                     _ => break,
                 },
                 _ => break,
             }
             $a.next();
         }
-    }
+    };
 }
 
 macro_rules! skip_expected {
@@ -34,23 +34,19 @@ macro_rules! skip_expected {
 }
 
 macro_rules! extract_expected {
-    ($a:tt, $b:expr, $c:expr) => {
-        {
-            skip_comments!($c);
-            match $c.next() {
-                Some(token) => match &token.token_type {
-                    TokenType::$a(val) => val,
-                    _ => bail!("Expected {:?}, got: {:#?}", $b, token),
-                },
-                None => bail!("Expected {:?}, got EOF.", $b),
-            }
+    ($a:tt, $b:expr, $c:expr) => {{
+        skip_comments!($c);
+        match $c.next() {
+            Some(token) => match &token.token_type {
+                TokenType::$a(val) => val,
+                _ => bail!("Expected {:?}, got: {:#?}", $b, token),
+            },
+            None => bail!("Expected {:?}, got EOF.", $b),
         }
-    };
+    }};
 }
 
-pub fn parse_module_name(
-    tokens: &mut PeekableTokens,
-) -> anyhow::Result<()> {
+pub fn parse_module_name(tokens: &mut PeekableTokens) -> anyhow::Result<()> {
     let module_name = extract_expected!(Identifier, "Module name", tokens);
     skip_expected!(Semicolon, tokens);
     println!("Module name: {}", module_name);
@@ -94,6 +90,28 @@ pub fn parse_var(tokens: &mut PeekableTokens) -> anyhow::Result<()> {
 }
 
 pub fn parse_program_body(tokens: &mut PeekableTokens) -> anyhow::Result<()> {
+    loop {
+        let token = tokens.next();
+        if token.is_none() {
+            break;
+        }
+        let token = token.expect("Impossible! Token is checked as none beforehand.");
+        println!("{:?}", token);
+        match token.token_type {
+            TokenType::End => {
+                if let Some(token) = tokens.peek() {
+                    match token.token_type {
+                        TokenType::Period => {
+                            tokens.next();
+                            break;
+                        }
+                        _ => {}
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
     Ok(())
 }
 
@@ -112,9 +130,9 @@ pub fn parse_tokens(tokens_vec: &Vec<Token>) -> anyhow::Result<()> {
                 "program" => parse_module_name(&mut tokens)?,
                 "unit" => parse_module_name(&mut tokens)?,
                 "var" => parse_var(&mut tokens)?,
-                "begin" => parse_program_body(&mut tokens)?,
                 _ => {}
             },
+            TokenType::Begin => parse_program_body(&mut tokens)?,
             _ => {}
         }
     }

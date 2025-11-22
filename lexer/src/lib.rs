@@ -259,10 +259,18 @@ pub fn get_tokens(source: &str) -> Vec<Token> {
     while !reader.is_eof() {
         let mut token = reader.read_token();
         if let TokenType::Identifier(ref val) = token.token_type {
-            if common::RESERVED_WORDS.contains(&val.to_lowercase().as_str()) {
-                token.token_type = TokenType::Keyword(val.to_lowercase());
-            } else {
-                token.token_type = TokenType::Identifier(val.to_lowercase());
+            let val = val.to_lowercase();
+            let val = val.as_str();
+            match val {
+                "begin" => token.token_type = TokenType::Begin,
+                "end" => token.token_type = TokenType::End,
+                _ => {
+                    if common::RESERVED_WORDS.contains(&val) {
+                        token.token_type = TokenType::Keyword(val.to_string());
+                    } else {
+                        token.token_type = TokenType::Identifier(val.to_string());
+                    }
+                }
             }
         }
         tokens.push(token);
