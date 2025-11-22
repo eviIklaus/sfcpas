@@ -24,7 +24,6 @@ impl ReadTokenResult {
 struct Reader<'a> {
     source: &'a str,
     source_iter: Peekable<Chars<'a>>,
-    reader_pos: usize,
     prev_char: Option<char>,
     current_char: Option<char>,
 
@@ -35,7 +34,6 @@ struct Reader<'a> {
 impl<'a> Reader<'a> {
     pub fn new(source: &'a str) -> Self {
         Self {
-            reader_pos: 0,
             pointer_encountered: false,
             is_first_char: true,
             prev_char: None,
@@ -48,20 +46,18 @@ impl<'a> Reader<'a> {
         self.is_first_char = true;
         self.pointer_encountered = false;
     }
-    pub fn is_eof(&self) -> bool {
-        self.reader_pos >= self.source.len()
+    pub fn is_eof(&mut self) -> bool {
+        matches!(self.source_iter.peek(), None)
     }
     fn peek(&mut self) -> &char {
         self.source_iter.peek().unwrap_or(&'\0')
     }
     fn skip_whitespace(&mut self) {
         while self.source_iter.peek().unwrap_or(&'\0').is_whitespace() {
-            self.reader_pos += 1;
             self.source_iter.next();
         }
     }
     fn read_next_char(&mut self) -> Option<char> {
-        self.reader_pos += 1;
         self.prev_char = self.current_char;
         self.current_char = self.source_iter.next();
         self.current_char
@@ -133,7 +129,6 @@ impl<'a> Reader<'a> {
         result
     }
     fn read_the_rest(&mut self, mut result: ReadTokenResult) -> ReadTokenResult {
-        self.reader_pos += 1;
         let chr = match self.read_next_char() {
             Some(chr) => chr,
             None => {
@@ -141,7 +136,10 @@ impl<'a> Reader<'a> {
                 return result;
             }
         };
-        if !matches!(result.token, Token::Comment(_)) && chr.is_whitespace() {
+        if !matches!(result.token, Token::Comment(_))
+            && !matches!(result.token, Token::StringLiteral(_))
+            && chr.is_whitespace()
+        {
             result.continue_reading = false;
             return result;
         }
@@ -186,7 +184,7 @@ impl<'a> Reader<'a> {
                     self.pointer_encountered = true;
                 }
                 let next = *self.peek();
-                if !next.is_alphanumeric() {
+                if !next.is_alphanumeric() && next != '_' {
                     result.continue_reading = false;
                 }
             }
