@@ -48,8 +48,6 @@ pub fn parse_var(tokens: &mut MultiPeek<std::slice::Iter<'_, Token>>) -> anyhow:
             },
             None => break,
         };
-        dbg!("New var name:");
-        dbg!(&var_name);
         current_var_names.push(var_name.to_string());
         match tokens.next() {
             Some(token) => match token.token_type {
