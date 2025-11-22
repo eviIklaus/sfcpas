@@ -1,6 +1,5 @@
-use common::CommentType;
-use common::Token;
-use std::iter::Peekable;
+use common::{CommentType, Token};
+use multipeek::{multipeek, MultiPeek};
 use std::str::Chars;
 
 #[derive(Debug)]
@@ -22,7 +21,7 @@ impl ReadTokenResult {
 
 #[derive(Debug)]
 struct Reader<'a> {
-    source_iter: Peekable<Chars<'a>>,
+    source_iter: MultiPeek<Chars<'a>>,
     prev_char: Option<char>,
     current_char: Option<char>,
 
@@ -35,7 +34,7 @@ impl<'a> Reader<'a> {
             is_first_char: true,
             prev_char: None,
             current_char: None,
-            source_iter: source.chars().peekable(),
+            source_iter: multipeek(source.chars()),
         }
     }
     pub fn reset_for_token_read(&mut self) {
