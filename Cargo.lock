@@ -48,7 +48,7 @@ dependencies = [
  "anyhow",
  "common",
  "mimalloc",
- "peek-again",
+ "multipeek",
 ]
 
 [[package]]
@@ -77,6 +77,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "multipeek"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1d6b1cf1c2ae7c8c3898cbf8354ee836bc7037e35592d3739a9901d53c97b6a2"
+
+[[package]]
 name = "parser"
 version = "0.1.0"
 dependencies = [
@@ -84,12 +90,6 @@ dependencies = [
  "common",
  "mimalloc",
 ]
-
-[[package]]
-name = "peek-again"
-version = "0.5.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "553d46e4c07b5b776977bc2c4615432bdf13eb934213c4803413dbb3fb447ca1"
 
 [[package]]
 name = "shlex"
