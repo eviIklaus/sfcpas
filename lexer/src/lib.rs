@@ -55,8 +55,9 @@ impl<'a> Reader<'a> {
         self.source_iter.peek().unwrap_or(&'\0')
     }
     fn skip_whitespace(&mut self) {
-        while self.source_iter.next().unwrap_or('\0').is_whitespace() {
+        while self.source_iter.peek().unwrap_or(&'\0').is_whitespace() {
             self.reader_pos += 1;
+            self.source_iter.next();
         }
     }
     fn read_next_char(&mut self) -> Option<char> {
@@ -71,6 +72,7 @@ impl<'a> Reader<'a> {
         match self.read_next_char() {
             None => result.continue_reading = false,
             Some(chr) => {
+                dbg!(chr);
                 if !chr.is_whitespace() {
                     if chr == '{' {
                         result.token = Token::Comment(CommentType::CurlyBrackets)
@@ -170,29 +172,66 @@ impl<'a> Reader<'a> {
                     }
                 }
             },
-            Token::Symbol(ref val) => {}
-            Token::Operator(ref val) => {}
-            Token::Keyword(ref val) => {}
-            Token::IntLiteral(ref val) => {}
+            Token::Symbol(ref mut val) => {
+                val.push(chr);
+                let next = *self.peek();
+                // Check if the next char is possibly the beginning of a pointer/deref or string literal.
+                if (chr != '^' && next == '^') || (chr != '\'' && next == '\'') {
+                    result.continue_reading = false;
+                }
+                // Check if it reached the end of a symbol
+                if !common::SYMBOLS.contains(&chr) {
+                    result.continue_reading = false;
+                }
+            }
+            Token::Operator(ref mut val) => {
+                val.push(chr);
+                // Check if it's an assignment operator or
+                // if it reached the end of an operator.
+                if chr == '=' || !common::OPERATORS.contains(&chr) {
+                    result.continue_reading = false;
+                }
+            }
+            Token::Identifier(ref mut val) => {
+                val.push(chr);
+                if chr == '^' && !self.pointer_encountered {
+                    self.pointer_encountered = true;
+                }
+                let next = *self.peek();
+                if !next.is_alphanumeric() {
+                    result.continue_reading = false;
+                }
+            }
+            Token::IntLiteral(ref mut val) => {
+                val.push(chr);
+                let next = *self.peek();
+                if !next.is_ascii_digit() {
+                    result.continue_reading = false;
+                }
+            }
             _ => {}
         }
         result
     }
     pub fn read_token(&mut self) -> Token {
         self.reset_for_token_read();
-        let mut read_result = self.read_first_char();
-        if !read_result.continue_reading {
-            return read_result.token;
+        let mut result = self.read_first_char();
+        if !result.continue_reading {
+            return result.token;
         }
         self.is_first_char = false;
         while !self.is_eof() {
-            if read_result.should_skip_next {
+            if !result.continue_reading {
+                return result.token;
+            }
+            if result.should_skip_next {
                 self.read_next_char();
+                result.should_skip_next = false;
             } else {
-                read_result = self.read_the_rest(read_result);
+                result = self.read_the_rest(result);
             }
         }
-        return Token::Eof;
+        result.token
     }
 }
 
