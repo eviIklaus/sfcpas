@@ -12,10 +12,6 @@ fn main() -> anyhow::Result<()> {
         let source: String = fs::read_to_string(arg)?;
         let tokens = lexer::get_tokens(&source);
         parser::parse_tokens(&tokens);
-
-        for token in tokens {
-            dbg!(token);
-        }
     }
 
     Ok(())
