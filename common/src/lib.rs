@@ -5,7 +5,7 @@ pub enum CommentType {
 }
 
 #[derive(Debug)]
-pub enum Token {
+pub enum TokenType {
     Identifier(String),
     Keyword(String),
     IntLiteral(String),
@@ -35,6 +35,13 @@ pub enum Token {
     Comma,
     Eof,
     Null,
+}
+
+#[derive(Debug)]
+pub struct Token {
+    pub token_type: TokenType,
+    pub col: usize,
+    pub line: usize,
 }
 
 pub static OPERATORS: &'static [char] = &[
