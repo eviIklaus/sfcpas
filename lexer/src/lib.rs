@@ -1,5 +1,5 @@
 use common::{CommentType, Token};
-use multipeek::{multipeek, MultiPeek};
+use multipeek::{MultiPeek, multipeek};
 use std::str::Chars;
 
 #[derive(Debug)]
@@ -71,14 +71,14 @@ impl<'a> Reader<'a> {
                     result.should_skip_next = true;
                     result.token = Token::AssignmentOperator;
                     return result;
-                } 
+                }
                 let mut is_single_char = true;
                 result.token = match chr {
                     '{' => {
                         self.is_first_char = false;
                         result.token = Token::Comment(CommentType::CurlyBrackets);
                         return result;
-                    },
+                    }
                     '[' => Token::OpenSquareBracket,
                     ']' => Token::CloseSquareBracket,
                     '^' => Token::PointerSymbol,
@@ -214,7 +214,7 @@ impl<'a> Reader<'a> {
         let mut result = self.read_first_char();
         if result.should_skip_next {
             self.read_next_char();
-        } 
+        }
         if !result.continue_reading {
             return result.token;
         }
@@ -238,7 +238,14 @@ pub fn get_tokens(source: &str) -> Vec<Token> {
     let mut reader = Reader::new(source);
     let mut tokens = Vec::new();
     while !reader.is_eof() {
-        let token = reader.read_token();
+        let mut token = reader.read_token();
+        if let Token::Identifier(ref val) = token {
+            if common::RESERVED_WORDS.contains(&val.to_lowercase().as_str()) {
+                token = Token::Keyword(val.to_lowercase());
+            } else {
+                token = Token::Identifier(val.to_lowercase());
+            }
+        }
         tokens.push(token);
     }
     tokens
