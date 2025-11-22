@@ -1,6 +1,5 @@
 #[derive(Debug)]
 pub enum CommentType {
-    Slash,
     Parenthesis,
     CurlyBrackets,
 }
@@ -11,7 +10,7 @@ pub enum Token {
     Keyword(String),
     IntLiteral(String),
     FloatLiteral(String),
-    CharLiteral(String),
+    CharLiteral(char),
     StringLiteral(String),
     Operator(String),
     Symbol(String),

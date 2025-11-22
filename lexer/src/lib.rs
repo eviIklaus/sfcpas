@@ -25,6 +25,8 @@ struct Reader<'a> {
     source: &'a str,
     source_iter: Peekable<Chars<'a>>,
     reader_pos: usize,
+    prev_char: Option<char>,
+    current_char: Option<char>,
 
     is_first_char: bool,
     pointer_encountered: bool,
@@ -36,6 +38,8 @@ impl<'a> Reader<'a> {
             reader_pos: 0,
             pointer_encountered: false,
             is_first_char: true,
+            prev_char: None,
+            current_char: None,
             source,
             source_iter: source.chars().peekable(),
         }
@@ -55,10 +59,17 @@ impl<'a> Reader<'a> {
             self.reader_pos += 1;
         }
     }
+    fn read_next_char(&mut self) -> Option<char> {
+        self.reader_pos += 1;
+        self.prev_char = self.current_char;
+        self.current_char = self.source_iter.next();
+        self.current_char
+    }
     fn read_first_char(&mut self) -> ReadTokenResult {
         let mut result = ReadTokenResult::new();
         self.skip_whitespace();
-        match self.source_iter.next() {
+        match self.read_next_char() {
+            None => result.continue_reading = false,
             Some(chr) => {
                 if !chr.is_whitespace() {
                     if chr == '{' {
@@ -80,7 +91,15 @@ impl<'a> Reader<'a> {
                         result.continue_reading = false;
                         result.token = Token::CloseParenthesis
                     } else if chr == '\'' {
-                        result.token = Token::CharLiteral(String::new())
+                        // Check if a single quote is in the string literal
+                        result.token = Token::StringLiteral(String::new());
+                        if *self.peek() == '\'' {
+                            let Token::StringLiteral(mut val) = result.token else {
+                                panic!("Impossible! It was set as a string literal before.")
+                            };
+                            val.push_str("\'");
+                            result.token = Token::StringLiteral(val)
+                        }
                     } else if chr.is_alphabetic() || chr == '_' {
                         result.token = Token::Identifier(chr.to_string());
                         let next = *self.peek();
@@ -108,14 +127,56 @@ impl<'a> Reader<'a> {
                     }
                 }
             }
-            None => result.continue_reading = false,
         }
-        self.reader_pos += 1;
         result
     }
-    fn read_the_rest(&mut self, mut read_result: ReadTokenResult) -> ReadTokenResult {
+    fn read_the_rest(&mut self, mut result: ReadTokenResult) -> ReadTokenResult {
         self.reader_pos += 1;
-        read_result
+        let chr = match self.read_next_char() {
+            Some(chr) => chr,
+            None => {
+                result.continue_reading = false;
+                return result;
+            }
+        };
+        if !matches!(result.token, Token::Comment(_)) && chr.is_whitespace() {
+            result.continue_reading = false;
+            return result;
+        }
+        match result.token {
+            Token::StringLiteral(ref mut val) => {
+                if chr == '\'' {
+                    if *self.peek() == '\'' {
+                        val.push('\'');
+                        result.should_skip_next = true;
+                    } else {
+                        result.continue_reading = false;
+                    }
+                } else {
+                    val.push(chr);
+                }
+            }
+            Token::Comment(ref comment_type) => match comment_type {
+                CommentType::Parenthesis => {
+                    if chr == ')' && self.prev_char == Some('*') {
+                        result.continue_reading = false;
+                        return result;
+                    }
+                }
+                CommentType::CurlyBrackets => {
+                    if chr == '}' {
+                        result.continue_reading = false;
+                        return result;
+                    }
+                }
+            },
+            Token::Symbol(ref val) => {}
+            Token::Operator(ref val) => {}
+            Token::Keyword(ref val) => {}
+            Token::IntLiteral(ref val) => {}
+            _ => {}
+        }
+        result
     }
     pub fn read_token(&mut self) -> Token {
         self.reset_for_token_read();
@@ -125,7 +186,11 @@ impl<'a> Reader<'a> {
         }
         self.is_first_char = false;
         while !self.is_eof() {
-            read_result = self.read_the_rest(read_result);
+            if read_result.should_skip_next {
+                self.read_next_char();
+            } else {
+                read_result = self.read_the_rest(read_result);
+            }
         }
         return Token::Eof;
     }
