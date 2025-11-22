@@ -48,6 +48,7 @@ dependencies = [
  "anyhow",
  "common",
  "mimalloc",
+ "peek-again",
 ]
 
 [[package]]
@@ -83,6 +84,12 @@ dependencies = [
  "common",
  "mimalloc",
 ]
+
+[[package]]
+name = "peek-again"
+version = "0.5.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "553d46e4c07b5b776977bc2c4615432bdf13eb934213c4803413dbb3fb447ca1"
 
 [[package]]
 name = "shlex"
