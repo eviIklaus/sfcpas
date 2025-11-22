@@ -71,7 +71,11 @@ impl<'a> Reader<'a> {
                 } 
                 let mut is_single_char = true;
                 result.token = match chr {
-                    '{' => Token::Comment(CommentType::CurlyBrackets),
+                    '{' => {
+                        self.is_first_char = false;
+                        result.token = Token::Comment(CommentType::CurlyBrackets);
+                        return result;
+                    },
                     '[' => Token::OpenSquareBracket,
                     ']' => Token::CloseSquareBracket,
                     '^' => Token::PointerSymbol,
