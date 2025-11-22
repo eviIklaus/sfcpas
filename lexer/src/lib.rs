@@ -25,20 +25,16 @@ struct Reader<'a> {
     source: &'a str,
     source_iter: Peekable<Chars<'a>>,
     reader_pos: usize,
-    token_pos: usize,
 
     is_first_char: bool,
     pointer_encountered: bool,
-    starts_with_whitespace: bool,
 }
 
 impl<'a> Reader<'a> {
     pub fn new(source: &'a str) -> Self {
         Self {
             reader_pos: 0,
-            token_pos: 0,
             pointer_encountered: false,
-            starts_with_whitespace: false,
             is_first_char: true,
             source,
             source_iter: source.chars().peekable(),
@@ -46,8 +42,6 @@ impl<'a> Reader<'a> {
     }
     pub fn reset_for_token_read(&mut self) {
         self.is_first_char = true;
-        self.token_pos = 0;
-        self.starts_with_whitespace = false;
         self.pointer_encountered = false;
     }
     pub fn is_eof(&self) -> bool {
@@ -106,6 +100,11 @@ impl<'a> Reader<'a> {
                             result.continue_reading = false;
                         }
                     } else if common::OPERATORS.contains(&chr) {
+                        result.token = Token::Operator(chr.to_string());
+                        // Check if it's an assignment operator or if the operator ends in the next char.
+                        if chr == '=' || !common::OPERATORS.contains(&chr) {
+                            result.continue_reading = false;
+                        }
                     }
                 }
             }
@@ -114,15 +113,28 @@ impl<'a> Reader<'a> {
         self.reader_pos += 1;
         result
     }
-    pub fn read_token(&mut self) {
+    fn read_the_rest(&mut self, mut read_result: ReadTokenResult) -> ReadTokenResult {
+        self.reader_pos += 1;
+        read_result
+    }
+    pub fn read_token(&mut self) -> Token {
         self.reset_for_token_read();
-        self.read_first_char();
+        let mut read_result = self.read_first_char();
+        if !read_result.continue_reading {
+            return read_result.token;
+        }
+        self.is_first_char = false;
+        while !self.is_eof() {
+            read_result = self.read_the_rest(read_result);
+        }
+        return Token::Eof;
     }
 }
 
 pub fn get_tokens(source: &str) {
     let mut reader = Reader::new(source);
     while !reader.is_eof() {
-        reader.read_token();
+        let token = reader.read_token();
+        dbg!(token);
     }
 }
