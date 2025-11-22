@@ -1,3 +1,1 @@
-fn parse_tokens() {
-	
-}
+fn parse_tokens() {}

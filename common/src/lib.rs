@@ -1,9 +1,16 @@
 #[derive(Debug)]
-pub enum TokenType {
+pub enum CommentType {
+    Slash,
+    Parenthesis,
+    CurlyBrackets,
+}
+
+#[derive(Debug)]
+pub enum Token {
     Identifier(String),
     Keyword(String),
-    IntLiteral(i64),
-    FloatLiteral(f64),
+    IntLiteral(String),
+    FloatLiteral(String),
     CharLiteral(String),
     StringLiteral(String),
     Operator(String),
@@ -13,10 +20,19 @@ pub enum TokenType {
     End,
     StatementEnd,
     ProgramEnd,
-    Comment,
+    Comment(CommentType),
     OpenParenthesis,
     CloseParenthesis,
     OpenSquareBracket,
     CloseSquareBracket,
+    Eof,
     Null,
 }
+
+pub static OPERATORS: &'static [char] = &[
+    '+', '-', '*', '/', // Arithmetic operators
+    '=', '<', '>', // Relational operators
+];
+
+pub static SYMBOLS: &'static [char] =
+    &[';', ':', ',', '.', '[', ']', '(', ')', '^', '@', '\'', '$'];
