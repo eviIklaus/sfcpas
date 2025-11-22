@@ -1,4 +1,4 @@
-use common::{CommentType, TokenType, Token};
+use common::{CommentType, Token, TokenType};
 use multipeek::{MultiPeek, multipeek};
 use std::str::Chars;
 
@@ -16,8 +16,9 @@ impl ReadTokenResult {
             continue_reading: true,
             token: Token {
                 token_type: TokenType::Eof,
-                col, line
-            }
+                col,
+                line,
+            },
         }
     }
 }
@@ -69,10 +70,10 @@ impl<'a> Reader<'a> {
             Some('\n') => {
                 self.current_col = 1;
                 self.current_line += 1;
-            },
+            }
             Some(_) => {
                 self.current_col += 1;
-            },
+            }
             None => {}
         }
         self.current_char
@@ -265,7 +266,7 @@ pub fn get_tokens(source: &str) -> Vec<Token> {
             }
         }
         match token.token_type {
-            TokenType::Comment(_) => { /* Skip comments. */ },
+            TokenType::Comment(_) => { /* Skip comments. */ }
             _ => tokens.push(token),
         }
     }

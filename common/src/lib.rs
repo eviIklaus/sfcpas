@@ -95,7 +95,6 @@ pub static RESERVED_WORDS: &'static [&str] = &[
     "set",
     "shl",
     "shr",
-    "string",
     "then",
     "to",
     "type",
