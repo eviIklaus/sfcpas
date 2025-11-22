@@ -264,7 +264,10 @@ pub fn get_tokens(source: &str) -> Vec<Token> {
                 token.token_type = TokenType::Identifier(val.to_lowercase());
             }
         }
-        tokens.push(token);
+        match token.token_type {
+            TokenType::Comment(_) => { /* Skip comments. */ },
+            _ => tokens.push(token),
+        }
     }
     tokens
 }

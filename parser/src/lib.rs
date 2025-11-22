@@ -2,30 +2,34 @@ use anyhow::bail;
 use multipeek::{multipeek, MultiPeek};
 use common::{Token, TokenType};
 
-macro_rules! read_expected_type{
+macro_rules! skip_expected {
     ($a:tt, $b:expr) => {
         match $b.next() {
             Some(token) => match &token.token_type {
                 TokenType::$a => {},
-                _ => bail!("Expected {:?}, got unknown token type: {:#?}", TokenType::$a, token),
+                _ => bail!("Expected {:?}, got: {:#?}", TokenType::$a, token),
             },
             None => bail!("Expected {:?}, got EOF.", TokenType::$a),
         };
     }
 }
 
-pub fn parse_module_name(tokens_vec: &mut MultiPeek<std::slice::Iter<'_, Token>>) -> anyhow::Result<()> {
-    let program_name = match tokens_vec.next() {
-        Some(token) => match &token.token_type {
-            TokenType::Identifier(val) => {
-                val
+macro_rules! extract_expected {
+    ($a:tt, $b:expr, $c:expr) => {
+        match $c.next() {
+            Some(token) => match &token.token_type {
+                TokenType::$a(val) => val,
+                _ => bail!("Expected {:?}, got: {:#?}", $b, token),
             },
-            _ => bail!("Expected module name, got unknown token type: {:#?}", token),
-        },
-        None => bail!("Expected module name, got EOF."),
-    };
-    read_expected_type!(Semicolon, tokens_vec);
-    println!("Program name: {}", program_name);
+            None => bail!("Expected {:?}, got EOF.", $b),
+        }
+    }
+}
+
+pub fn parse_module_name(tokens_vec: &mut MultiPeek<std::slice::Iter<'_, Token>>) -> anyhow::Result<()> {
+    let module_name = extract_expected!(Identifier, "Module name", tokens_vec);
+    skip_expected!(Semicolon, tokens_vec);
+    println!("Module name: {}", module_name);
 
     Ok(())
 }
