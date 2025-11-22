@@ -46,6 +46,9 @@ impl<'a> Reader<'a> {
     fn peek(&mut self) -> &char {
         self.source_iter.peek().unwrap_or(&'\0')
     }
+    fn peek_2(&mut self) -> &char {
+        self.source_iter.peek_nth(1).unwrap_or(&'\0')
+    }
     fn skip_whitespace(&mut self) {
         while self.source_iter.peek().unwrap_or(&'\0').is_whitespace() {
             self.source_iter.next();
@@ -109,11 +112,11 @@ impl<'a> Reader<'a> {
                     // Check if a single quote is in the string literal
                     result.token = Token::StringLiteral(String::new());
                     if *self.peek() == '\'' {
-                        let Token::StringLiteral(mut val) = result.token else {
-                            panic!("Impossible! It was set as a string literal before.")
-                        };
-                        val.push_str("\'");
-                        result.token = Token::StringLiteral(val)
+                        // Check if the string literal is just empty
+                        if *self.peek_2() != '\'' {
+                            result.should_skip_next = true;
+                            result.continue_reading = false;
+                        }
                     }
                 } else if chr.is_alphabetic() || chr == '_' {
                     // Check if it's a possible identifier.
