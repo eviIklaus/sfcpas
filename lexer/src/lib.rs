@@ -234,10 +234,12 @@ impl<'a> Reader<'a> {
     }
 }
 
-pub fn get_tokens(source: &str) {
+pub fn get_tokens(source: &str) -> Vec<Token> {
     let mut reader = Reader::new(source);
+    let mut tokens = Vec::new();
     while !reader.is_eof() {
         let token = reader.read_token();
-        dbg!(token);
+        tokens.push(token);
     }
+    tokens
 }

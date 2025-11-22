@@ -41,3 +41,12 @@ pub static OPERATORS: &'static [char] = &[
     '+', '-', '*', '/', // Arithmetic operators
     '=', '<', '>', // Relational operators
 ];
+
+// Based on: https://wiki.freepascal.org/The_parser#Module_information
+#[derive(Debug)]
+pub struct Module {
+    is_unit: bool,
+    name: String,
+
+    used_units: Vec<String>,
+}

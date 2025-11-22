@@ -16,6 +16,7 @@ dependencies = [
  "common",
  "lexer",
  "mimalloc",
+ "parser",
 ]
 
 [[package]]

@@ -17,3 +17,4 @@ mimalloc = "0.1.47"
 anyhow = "1.0.100"
 common = { path = "../common" }
 lexer = { path = "../lexer" }
+parser = { path = "../parser" }
