@@ -60,6 +60,7 @@ pub fn parse_var(tokens: &mut MultiPeek<std::slice::Iter<'_, Token>>) -> anyhow:
     let mut vars: HashMap<String, String> = HashMap::new();
     let mut current_var_names: Vec<String> = Vec::new();
     loop {
+        skip_comments!(tokens);
         let var_name = match tokens.next() {
             Some(token) => match &token.token_type {
                 TokenType::Identifier(val) => val,
