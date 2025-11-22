@@ -63,6 +63,13 @@ impl<'a> Reader<'a> {
         match self.read_next_char() {
             None => result.continue_reading = false,
             Some(chr) => {
+                // Check if it's an assignment operator
+                if chr == ':' && *self.peek() == '=' {
+                    result.continue_reading = false;
+                    result.should_skip_next = true;
+                    result.token = Token::AssignmentOperator;
+                    return result;
+                } 
                 let mut is_single_char = true;
                 result.token = match chr {
                     '{' => Token::Comment(CommentType::CurlyBrackets),
@@ -87,6 +94,7 @@ impl<'a> Reader<'a> {
                     result.continue_reading = false;
                     return result;
                 }
+                // Check if it's either a beginning of a comment or just a parenthesis.
                 if chr == '(' {
                     if *self.peek() == '*' {
                         result.token = Token::Comment(CommentType::Parenthesis)
@@ -105,16 +113,19 @@ impl<'a> Reader<'a> {
                         result.token = Token::StringLiteral(val)
                     }
                 } else if chr.is_alphabetic() || chr == '_' {
+                    // Check if it's a possible identifier.
                     result.token = Token::Identifier(chr.to_string());
                     let next = *self.peek();
                     result.continue_reading = next == '_' || next.is_alphanumeric();
                 } else if chr.is_ascii_digit() {
+                    // Check if it's a possible integer literal.
                     result.token = Token::IntLiteral(chr.to_string());
                     result.continue_reading = self.peek().is_ascii_digit();
                 } else if common::OPERATORS.contains(&chr) {
+                    // Check if it's a possible operator.
                     result.token = Token::Operator(chr.to_string());
                     let next = *self.peek();
-                    // Check if it's an assignment operator or if the operator ends in the next char.
+                    // Check if it's an equality operator or if the operator ends here.
                     if chr == '=' || !common::OPERATORS.contains(&next) {
                         result.continue_reading = false;
                     }
@@ -195,6 +206,9 @@ impl<'a> Reader<'a> {
     pub fn read_token(&mut self) -> Token {
         self.reset_for_token_read();
         let mut result = self.read_first_char();
+        if result.should_skip_next {
+            self.read_next_char();
+        } 
         if !result.continue_reading {
             return result.token;
         }

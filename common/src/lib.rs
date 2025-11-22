@@ -12,6 +12,7 @@ pub enum Token {
     FloatLiteral(String),
     CharLiteral(char),
     StringLiteral(String),
+    AssignmentOperator,
     Operator(String),
     Symbol(String),
     Begin,
