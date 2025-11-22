@@ -3,6 +3,8 @@ use common::{Token, TokenType};
 use multipeek::{MultiPeek, multipeek};
 use std::collections::HashMap;
 
+type PeekableTokens<'a> = MultiPeek<std::slice::Iter<'a, Token>>;
+
 macro_rules! skip_comments {
     ($a:expr) => {
         loop {
@@ -47,7 +49,7 @@ macro_rules! extract_expected {
 }
 
 pub fn parse_module_name(
-    tokens: &mut MultiPeek<std::slice::Iter<'_, Token>>,
+    tokens: &mut PeekableTokens,
 ) -> anyhow::Result<()> {
     let module_name = extract_expected!(Identifier, "Module name", tokens);
     skip_expected!(Semicolon, tokens);
@@ -56,7 +58,7 @@ pub fn parse_module_name(
     Ok(())
 }
 
-pub fn parse_var(tokens: &mut MultiPeek<std::slice::Iter<'_, Token>>) -> anyhow::Result<()> {
+pub fn parse_var(tokens: &mut PeekableTokens) -> anyhow::Result<()> {
     let mut vars: HashMap<String, String> = HashMap::new();
     let mut current_var_names: Vec<String> = Vec::new();
     loop {
@@ -91,8 +93,8 @@ pub fn parse_var(tokens: &mut MultiPeek<std::slice::Iter<'_, Token>>) -> anyhow:
     Ok(())
 }
 
-pub fn parse_program_stmt() {
-
+pub fn parse_program_body(tokens: &mut PeekableTokens) -> anyhow::Result<()> {
+    Ok(())
 }
 
 pub fn parse_tokens(tokens_vec: &Vec<Token>) -> anyhow::Result<()> {
@@ -110,6 +112,7 @@ pub fn parse_tokens(tokens_vec: &Vec<Token>) -> anyhow::Result<()> {
                 "program" => parse_module_name(&mut tokens)?,
                 "unit" => parse_module_name(&mut tokens)?,
                 "var" => parse_var(&mut tokens)?,
+                "begin" => parse_program_body(&mut tokens)?,
                 _ => {}
             },
             _ => {}
