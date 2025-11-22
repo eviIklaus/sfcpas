@@ -76,7 +76,7 @@ impl<'a> Reader<'a> {
                         result.continue_reading = false;
                         result.token = Token::CloseSquareBracket
                     } else if chr == '(' {
-                        if self.peek() == &'*' {
+                        if *self.peek() == '*' {
                             result.token = Token::Comment(CommentType::Parenthesis)
                         } else {
                             result.continue_reading = false;
@@ -89,12 +89,23 @@ impl<'a> Reader<'a> {
                         result.token = Token::CharLiteral(String::new())
                     } else if chr.is_alphabetic() || chr == '_' {
                         result.token = Token::Identifier(chr.to_string());
-                        let next = self.peek();
-                        result.continue_reading = next != &'_' && !next.is_alphanumeric();
+                        let next = *self.peek();
+                        result.continue_reading = next == '_' || next.is_alphanumeric();
                     } else if chr.is_ascii_digit() {
                         result.token = Token::IntLiteral(chr.to_string());
-                        let next = self.peek();
-                        result.continue_reading = next != &'_' && !next.is_alphanumeric();
+                        result.continue_reading = self.peek().is_ascii_digit();
+                    } else if common::SYMBOLS.contains(&chr) {
+                        result.token = Token::Symbol(chr.to_string());
+                        let next = *self.peek();
+                        // Check if the next char is possibly the beginning of a pointer/deref or string literal.
+                        if (chr != '^' && next == '^') || (chr != '\'' && next == '\'') {
+                            result.continue_reading = false;
+                        }
+                        // Check if the symbol ends in the next char.
+                        if !common::SYMBOLS.contains(&next) {
+                            result.continue_reading = false;
+                        }
+                    } else if common::OPERATORS.contains(&chr) {
                     }
                 }
             }
